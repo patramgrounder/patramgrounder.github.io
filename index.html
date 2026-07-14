@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patram Grounder | BharatGen Research</title>
+<meta name="description" content="Patram Grounder — a single BharatGen document-grounding model that answers with pixel-accurate evidence masks and, at the flip of a toggle, reasons step-by-step with every step grounded. One model, two modes.">
+<link rel="icon" type="image/png" href="static/images/logos/icon_bharatgen.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Devanagari:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F7F3EA;
+    --paper-deep:#EFE8D8;
+    --ink:#211C16;
+    --ink-soft:#5B5347;
+    --indigo:#2B3A6B;
+    --indigo-deep:#1B2647;
+    --vermillion:#B5482F;
+    --rule:#DAD0BA;
+    --rule-strong:#C7BA9C;
+    --good:#3D6B4C;
+    --gold:#B0812A;
+    --max-w:1080px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+  }
+  ::selection{background:var(--indigo); color:var(--paper);}
+  a{color:inherit;}
+  img{max-width:100%;display:block;}
+
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    pointer-events:none; z-index:0;
+    background-image:radial-gradient(circle at 1px 1px, rgba(33,28,22,0.05) 1px, transparent 0);
+    background-size:22px 22px;
+    opacity:.5;
+  }
+
+  .wrap{max-width:var(--max-w); margin:0 auto; padding:0 28px; position:relative; z-index:1;}
+
+  /* ---------- NAV ---------- */
+  nav{
+    border-bottom:1px solid var(--rule);
+    background:rgba(247,243,234,0.88);
+    backdrop-filter:blur(6px);
+    position:sticky; top:0; z-index:50;
+  }
+  .nav-inner{
+    max-width:var(--max-w); margin:0 auto; padding:16px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{
+    display:flex; align-items:baseline; gap:10px;
+    font-family:'IBM Plex Serif', serif; font-weight:600; font-size:1.18rem;
+  }
+  .brand .mark{
+    font-family:'IBM Plex Sans Devanagari', sans-serif;
+    color:var(--vermillion); font-size:1.05rem; font-weight:600;
+  }
+  .brand .version{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.72rem; color:var(--ink-soft);
+    border:1px solid var(--rule-strong); padding:2px 7px; border-radius:20px;
+    vertical-align:middle; margin-left:4px;
+  }
+  .nav-links{display:flex; gap:28px; font-size:.86rem; color:var(--ink-soft);}
+  .nav-links a{text-decoration:none; transition:color .15s;}
+  .nav-links a:hover{color:var(--vermillion);}
+  .nav-cta{
+    font-size:.8rem; font-weight:600; text-decoration:none;
+    border:1px solid var(--ink); padding:8px 16px; border-radius:2px;
+    color:var(--ink); white-space:nowrap; transition:background .15s, color .15s;
+  }
+  .nav-cta:hover{background:var(--ink); color:var(--paper);}
+  @media(max-width:820px){.nav-links{display:none;}}
+
+  /* ---------- BANNER ---------- */
+  .step-banner{
+    background:var(--indigo-deep); color:rgba(242,239,230,0.85);
+    text-align:center; padding:11px 20px; font-size:.82rem; letter-spacing:.02em;
+  }
+  .step-banner strong{color:#fff;}
+  .step-banner .om{font-family:'IBM Plex Sans Devanagari',sans-serif; color:#E8B79C;}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:60px 0 40px;}
+  .eyebrow{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--vermillion); font-weight:600; margin-bottom:22px;
+  }
+  .eyebrow .tag{border:1px solid var(--vermillion); padding:3px 9px; border-radius:20px; font-size:.7rem;}
+  .eyebrow .preview{border:1px solid var(--rule-strong); color:var(--ink-soft); padding:3px 9px; border-radius:20px; font-size:.7rem;}
+
+  h1.title{
+    font-family:'IBM Plex Serif', serif; font-weight:600;
+    font-size:clamp(2.4rem,5.5vw,4.2rem);
+    line-height:1.03; margin:0 0 8px; letter-spacing:-.01em;
+  }
+  .title .grad{color:var(--indigo);}
+  .title-sub{
+    font-family:'IBM Plex Sans Devanagari', sans-serif;
+    font-size:.28em; color:var(--ink-soft); font-weight:400;
+    display:block; margin-top:12px; letter-spacing:.02em;
+  }
+  .dek{font-size:1.22rem; color:var(--ink-soft); max-width:660px; margin:20px 0 24px; font-weight:400;}
+  .dek strong{color:var(--ink); font-weight:600;}
+
+  .authors{font-size:.92rem; color:var(--ink-soft); line-height:2; margin:6px 0 2px; max-width:720px;}
+  .authors a{color:var(--ink); text-decoration:none; border-bottom:1px solid transparent; transition:border-color .2s;}
+  .authors a:hover{border-bottom-color:var(--vermillion);}
+  .authors sup{color:var(--vermillion); font-size:.72em;}
+  .affil{font-size:.85rem; color:var(--ink-soft); margin-bottom:18px;}
+  .affil strong{color:var(--ink);}
+
+  .meta-row{
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+    font-size:.85rem; color:var(--ink-soft);
+    padding-top:20px; border-top:1px solid var(--rule);
+  }
+  .pill-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    text-decoration:none; padding:9px 16px; font-size:.82rem; font-weight:600;
+    border-radius:2px; border:1px solid var(--rule-strong); color:var(--ink);
+    background:transparent; transition:background .15s, color .15s, border-color .15s;
+  }
+  .pill-btn:hover{background:var(--paper-deep);}
+  .pill-btn.primary{background:var(--indigo); color:#fff; border-color:var(--indigo);}
+  .pill-btn.primary:hover{background:var(--indigo-deep);}
+  .pill-btn.soon{opacity:.55; cursor:default;}
+  .pill-btn .s{font-family:'IBM Plex Mono',monospace; font-size:.62rem; text-transform:uppercase; letter-spacing:.05em; border:1px solid var(--rule-strong); padding:1px 5px; border-radius:3px; margin-left:2px;}
+
+  .hero-logos{display:flex; align-items:center; gap:30px; margin-top:30px; flex-wrap:wrap;}
+  .hero-logos img{height:38px; width:auto; opacity:.85;}
+  .hero-logos .lbl{font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-soft); font-weight:600;}
+
+  /* ---------- SECTIONS ---------- */
+  section{padding:56px 0;}
+  section.divider-top{border-top:1px solid var(--rule);}
+  h2.section-title{
+    font-family:'IBM Plex Serif', serif; font-weight:600;
+    font-size:1.9rem; margin:0 0 8px; letter-spacing:-.01em;
+  }
+  .section-sub{color:var(--ink-soft); font-size:1rem; max-width:700px; margin-bottom:28px;}
+  p{font-size:1.01rem; color:#3A352C; margin:0 0 18px;}
+  .lede{font-size:1.1rem; color:var(--ink);}
+  strong{color:var(--ink); font-weight:600;}
+  .eyebrow-lbl{display:block; font-size:.74rem; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--vermillion); margin-bottom:12px;}
+  code{font-family:'IBM Plex Mono',monospace; font-size:.86em; background:var(--paper-deep); border:1px solid var(--rule); padding:1px 5px; border-radius:4px; color:var(--indigo-deep);}
+
+  blockquote.callout{
+    border-left:3px solid var(--vermillion);
+    background:var(--paper-deep);
+    margin:24px 0; padding:18px 22px;
+    font-size:.98rem; color:var(--ink-soft); border-radius:0 3px 3px 0;
+  }
+
+  /* ---------- ONE MODEL / TWO MODES ---------- */
+  .modes-strip{
+    margin-top:14px; border:1px solid var(--rule); border-radius:4px; overflow:hidden;
+    display:grid; grid-template-columns:1fr auto 1fr; background:var(--rule);
+  }
+  .mode-cell{background:var(--paper); padding:26px 26px;}
+  .mode-cell .m-tag{font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.04em; margin-bottom:8px; display:inline-block; padding:2px 8px; border-radius:20px;}
+  .mode-cell.answer .m-tag{color:var(--indigo); border:1px solid var(--indigo);}
+  .mode-cell.reason .m-tag{color:var(--vermillion); border:1px solid var(--vermillion);}
+  .mode-cell h3{font-family:'IBM Plex Serif',serif; font-size:1.15rem; margin:0 0 8px; font-weight:600;}
+  .mode-cell p{font-size:.9rem; color:var(--ink-soft); margin:0;}
+  .mode-mid{
+    background:var(--indigo-deep); color:#fff; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:0 22px; gap:6px; min-width:120px;
+  }
+  .mode-mid .knob{font-size:1.6rem;}
+  .mode-mid .txt{font-family:'IBM Plex Mono',monospace; font-size:.66rem; text-transform:uppercase; letter-spacing:.08em; text-align:center; color:rgba(255,255,255,.75);}
+  @media(max-width:760px){.modes-strip{grid-template-columns:1fr;} .mode-mid{flex-direction:row; padding:14px;}}
+
+  /* ---------- PILLARS ---------- */
+  .pillars{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--rule); border:1px solid var(--rule); margin-top:10px;}
+  .pillars.four{grid-template-columns:1fr 1fr;}
+  .pillar{background:var(--paper); padding:26px 24px;}
+  .pillar .num{font-family:'IBM Plex Mono',monospace; font-size:.75rem; color:var(--vermillion); margin-bottom:8px;}
+  .pillar h3{font-family:'IBM Plex Serif',serif; font-size:1.12rem; margin:0 0 10px; font-weight:600; display:flex; align-items:center; gap:8px;}
+  .pillar p{font-size:.9rem; color:var(--ink-soft); margin:0;}
+  @media(max-width:760px){.pillars, .pillars.four{grid-template-columns:1fr;}}
+
+  /* ---------- INTERACTIVE DEMO ---------- */
+  section#demo{border-top:1px solid var(--rule);}
+  .demo-shell{border:1px solid var(--rule-strong); border-radius:5px; background:var(--paper-deep); overflow:hidden; box-shadow:0 12px 40px rgba(27,38,71,0.08);}
+  .demo-toolbar{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:14px 18px; background:var(--indigo-deep); flex-wrap:wrap;
+  }
+  .mode-switch{display:inline-flex; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.16); border-radius:40px; padding:3px;}
+  .mode-switch button{
+    font-family:'IBM Plex Sans',sans-serif; font-size:.82rem; font-weight:600;
+    border:none; background:transparent; color:rgba(255,255,255,0.7);
+    padding:8px 18px; border-radius:40px; cursor:pointer; transition:background .18s, color .18s;
+    display:flex; align-items:center; gap:7px; white-space:nowrap;
+  }
+  .mode-switch button.is-active{background:var(--paper); color:var(--indigo-deep);}
+  .demo-toolbar .toolbar-note{font-family:'IBM Plex Mono',monospace; font-size:.7rem; color:rgba(255,255,255,0.55); letter-spacing:.03em;}
+  .demo-toolbar .bg-logo{height:28px; opacity:.9;}
+
+  .ex-tabs{display:flex; gap:6px; flex-wrap:wrap; padding:14px 18px 0;}
+  .ex-tab{
+    font-family:'IBM Plex Sans',sans-serif; font-size:.8rem; font-weight:600;
+    border:1px solid var(--rule-strong); background:var(--paper); color:var(--ink-soft);
+    padding:6px 14px; border-radius:20px; cursor:pointer; transition:all .16s;
+  }
+  .ex-tab:hover{border-color:var(--indigo); color:var(--indigo);}
+  .ex-tab.is-active{background:var(--indigo); border-color:var(--indigo); color:#fff;}
+
+  .demo-panel{display:grid; grid-template-columns:56fr 44fr; gap:0; padding:18px;}
+  @media(max-width:820px){.demo-panel{grid-template-columns:1fr;}}
+
+  .img-col{display:flex; flex-direction:column; gap:12px; padding-right:18px;}
+  @media(max-width:820px){.img-col{padding-right:0; padding-bottom:18px;}}
+  .img-container{position:relative; width:100%; border-radius:4px; overflow:hidden; border:1px solid var(--rule-strong); background:#fff;}
+  .img-container img{width:100%; height:auto; display:block;}
+  .hl-box{position:absolute; pointer-events:none; border-radius:3px; clip-path:inset(0 100% 0 0);}
+  .hl-box.revealed{transition:left .3s ease, top .3s ease, width .3s ease, height .3s ease;}
+  @keyframes hlSweep{from{clip-path:inset(0 100% 0 0);} to{clip-path:inset(0 0% 0 0);}}
+  .hl-box.sweeping{animation:hlSweep .55s ease-out forwards;}
+  .hl-poly{clip-path:inset(0 100% 0 0);}
+  .hl-poly.sweeping{animation:hlSweep .55s ease-out forwards;}
+
+  .gran-toggle{display:flex; gap:6px; justify-content:center; align-items:center; flex-wrap:wrap;}
+  .gran-toggle .g-lbl{font-family:'IBM Plex Mono',monospace; font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); margin-right:4px;}
+  .gran-btn{font-family:'IBM Plex Sans',sans-serif; font-size:.74rem; font-weight:600; border:1px solid var(--rule-strong); background:var(--paper); color:var(--ink-soft); padding:4px 13px; border-radius:20px; cursor:pointer; transition:all .16s;}
+  .gran-btn:hover{border-color:var(--indigo); color:var(--indigo);}
+  .gran-btn.is-active{background:var(--indigo); border-color:var(--indigo); color:#fff;}
+
+  .chat-col{background:#fff; border:1px solid var(--rule-strong); border-radius:4px; padding:20px; display:flex; flex-direction:column; gap:14px; min-height:340px;}
+  .q-bubble{align-self:flex-start; background:var(--paper-deep); border:1px solid var(--rule); border-radius:4px 12px 12px 12px; padding:12px 15px; font-size:.9rem; line-height:1.6; color:var(--ink); max-width:96%;}
+  .q-bubble .q-lbl{font-family:'IBM Plex Mono',monospace; font-size:.64rem; text-transform:uppercase; letter-spacing:.06em; color:var(--vermillion); display:block; margin-bottom:4px;}
+  .send-row{display:flex; justify-content:flex-end;}
+  .send-btn{font-family:'IBM Plex Sans',sans-serif; font-size:.82rem; font-weight:600; background:var(--indigo); color:#fff; border:none; padding:9px 20px; border-radius:40px; cursor:pointer; transition:background .18s, opacity .18s; display:inline-flex; align-items:center; gap:7px;}
+  .send-btn:hover:not(:disabled){background:var(--indigo-deep);}
+  .send-btn:disabled{opacity:.4; cursor:default;}
+
+  .out-area{display:flex; flex-direction:column; gap:0;}
+  .a-bubble{align-self:flex-start; background:var(--paper); border:1px solid var(--rule); border-radius:12px 12px 12px 4px; padding:13px 16px; font-size:.92rem; line-height:1.8; color:var(--ink); width:100%; word-break:break-word;}
+  .step-row{display:flex; gap:9px; align-items:flex-start; padding:8px 2px; border-bottom:1px dashed var(--rule);}
+  .step-row:last-child{border-bottom:none;}
+  .step-lbl{flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-size:.64rem; font-weight:600; background:var(--paper-deep); color:var(--ink-soft); border:1px solid var(--rule); padding:2px 7px; border-radius:4px; margin-top:2px;}
+  .step-lbl.final{background:var(--vermillion); border-color:var(--vermillion); color:#fff;}
+  .step-txt{flex:1; font-size:.9rem; line-height:1.7; color:var(--ink);}
+  .answer-span{border-radius:3px; padding:0 3px;}
+  @keyframes chipPulse{0%,100%{transform:scale(1); opacity:1;} 50%{transform:scale(1.35); opacity:.6;}}
+  .ground-chip{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.66rem; font-weight:600; vertical-align:middle; margin:0 2px; cursor:default; animation:chipPulse .5s ease 2;}
+  .legend-row{display:flex; flex-wrap:wrap; gap:10px; padding-top:12px; border-top:1px solid var(--rule); font-size:.8rem; color:var(--ink-soft);}
+  .legend-item{display:flex; align-items:center; gap:6px;}
+  .legend-dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+  .reset-row{display:flex;}
+  .reset-btn{font-family:'IBM Plex Sans',sans-serif; font-size:.8rem; font-weight:600; background:transparent; color:var(--ink-soft); border:1px solid var(--rule-strong); padding:7px 15px; border-radius:40px; cursor:pointer; transition:all .18s;}
+  .reset-btn:hover{border-color:var(--indigo); color:var(--indigo);}
+  .demo-caption{font-size:.82rem; color:var(--ink-soft); font-style:italic; margin-top:16px; text-align:center;}
+
+  /* ---------- DATASET TREE ---------- */
+  .tree-wrap{border:1px solid var(--rule); border-radius:5px; background:var(--paper-deep); padding:8px; overflow-x:auto;}
+  pre.tree{
+    font-family:'IBM Plex Mono',monospace; font-size:.86rem; line-height:2.1;
+    color:var(--ink-soft); margin:0; padding:20px 22px; white-space:pre; min-width:520px;
+  }
+  pre.tree .root{color:var(--vermillion); font-weight:600; font-size:1rem;}
+  pre.tree .node{color:var(--indigo); font-weight:600;}
+  pre.tree .desc{color:var(--ink-soft);}
+  pre.tree .stat{color:var(--good); font-weight:600;}
+  .ds-cards{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:24px;}
+  @media(max-width:760px){.ds-cards{grid-template-columns:1fr;}}
+  .ds-card{border:1px solid var(--rule); border-radius:4px; background:var(--paper); padding:22px 24px;}
+  .ds-card h3{font-family:'IBM Plex Serif',serif; font-size:1.05rem; margin:0 0 6px; font-weight:600;}
+  .ds-card .kbadge{font-family:'IBM Plex Mono',monospace; font-size:.66rem; color:var(--vermillion); border:1px solid var(--rule-strong); border-radius:20px; padding:2px 8px; margin-bottom:10px; display:inline-block;}
+  .ds-card p{font-size:.88rem; color:var(--ink-soft); margin:0 0 14px;}
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .stat-box{text-align:center; background:var(--paper-deep); border:1px solid var(--rule); border-radius:4px; padding:14px 8px;}
+  .stat-num{font-family:'IBM Plex Serif',serif; font-size:1.4rem; font-weight:600; color:var(--indigo); line-height:1.1;}
+  .stat-lbl{font-size:.72rem; color:var(--ink-soft); margin-top:3px;}
+
+  /* ---------- COMPARE TABLE / BOARD ---------- */
+  .board-section-label{font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:600; margin-bottom:10px;}
+  .board-wrap{overflow-x:auto; border:1px solid var(--rule); border-radius:4px; background:#fff; margin-bottom:14px;}
+  table.board{width:100%; border-collapse:collapse; min-width:640px; font-size:.86rem;}
+  table.board th, table.board td{padding:11px 14px; text-align:center; white-space:nowrap; border-bottom:1px solid var(--rule);}
+  table.board th:first-child, table.board td:first-child{text-align:left; position:sticky; left:0; background:#fff; border-right:1px solid var(--rule);}
+  table.board thead th{background:var(--indigo-deep); color:#F2EFE6; font-weight:600; font-size:.72rem; letter-spacing:.04em; text-transform:uppercase;}
+  table.board thead th:first-child{background:var(--indigo-deep);}
+  table.board tbody tr.us td{background:rgba(181,72,47,0.09); font-weight:600;}
+  table.board tbody tr.us td:first-child{background:rgba(181,72,47,0.13); border-left:3px solid var(--vermillion);}
+  table.board tbody tr:nth-child(even):not(.us) td{background:#FBF9F4;}
+  table.board tbody tr:nth-child(even):not(.us) td:first-child{background:#FBF9F4;}
+  table.board .best{color:var(--vermillion); font-weight:700;}
+  .rank-badge{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--vermillion); margin-right:6px;}
+  .board-note{font-size:.78rem; color:var(--ink-soft); margin-top:8px; font-style:italic; margin-bottom:28px;}
+
+  /* ---------- USE CASES ---------- */
+  .usecases{display:flex; flex-direction:column; gap:0;}
+  .usecase{border-top:1px solid var(--rule); padding:34px 0; display:grid; grid-template-columns:200px 1fr; gap:34px;}
+  .usecase:last-child{border-bottom:1px solid var(--rule);}
+  .usecase .sector{font-family:'IBM Plex Serif',serif; font-weight:600; font-size:1.1rem; color:var(--indigo);}
+  .usecase .sector .tag-script{display:block; font-family:'IBM Plex Sans Devanagari',sans-serif; font-size:.9rem; color:var(--ink-soft); margin-top:6px; font-weight:400;}
+  .trace{background:var(--paper-deep); border:1px solid var(--rule); border-radius:4px; padding:16px 18px; margin-top:14px; font-family:'IBM Plex Mono',monospace; font-size:.78rem; color:var(--ink-soft); line-height:1.8;}
+  .trace .q{color:var(--ink); font-weight:600; font-family:'IBM Plex Sans',sans-serif; font-size:.86rem;}
+  .trace .grounded{color:var(--good); border-bottom:1px dashed var(--good); padding-bottom:1px;}
+  .trace .final{color:var(--vermillion); font-weight:600; font-family:'IBM Plex Sans',sans-serif; font-size:.86rem; margin-top:6px; display:block;}
+  @media(max-width:760px){.usecase{grid-template-columns:1fr; gap:10px;}}
+
+  /* ---------- WHATS NEXT ---------- */
+  .next-section{background:var(--indigo-deep); color:#F2EFE6; padding:48px 0;}
+  .next-section h2{font-family:'IBM Plex Serif',serif; font-size:1.7rem; margin:0 0 12px; color:#fff;}
+  .next-section p{color:rgba(242,239,230,0.75); max-width:640px;}
+  .next-section .teaser-grid{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.1); margin-top:24px; border-radius:4px;}
+  .teaser-item{background:var(--indigo-deep); padding:20px 22px;}
+  .teaser-item .t-label{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:rgba(242,239,230,0.5); margin-bottom:6px;}
+  .teaser-item .t-val{font-family:'IBM Plex Serif',serif; font-size:1.02rem; color:#F2EFE6;}
+  @media(max-width:680px){.next-section .teaser-grid{grid-template-columns:1fr;}}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid var(--rule); padding:46px 0 60px; background:var(--paper-deep);}
+  .foot-cta h2{font-family:'IBM Plex Serif',serif; font-size:1.6rem; margin:0 0 10px;}
+  .foot-buttons{display:flex; gap:12px; margin-top:18px; flex-wrap:wrap;}
+  .fine{font-size:.78rem; color:var(--ink-soft); margin-top:40px; border-top:1px solid var(--rule); padding-top:18px; line-height:1.8;}
+  .fine a{color:var(--ink-soft);}
+
+  .reveal{opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="step-banner">
+  <span class="om">पत्रम्&nbsp;</span> <strong>Patram Grounder</strong> — BharatGen's document-grounding model. One model, two modes: point-precise answers and step-by-step grounded reasoning.
+</div>
+
+<nav>
+  <div class="nav-inner">
+    <div class="brand">
+      <span class="mark">पत्रम्</span> Patram Grounder <span class="version">v1</span>
+    </div>
+    <div class="nav-links">
+      <a href="#intro">Overview</a>
+      <a href="#modes">Two Modes</a>
+      <a href="#demo">Live Demo</a>
+      <a href="#data">PatramQA</a>
+      <a href="#benchmarks">Benchmarks</a>
+      <a href="#usecases">Use Cases</a>
+    </div>
+    <a class="nav-cta" href="#demo">Try the Toggle</a>
+  </div>
+</nav>
+
+<header class="wrap hero" id="intro">
+  <div class="eyebrow">
+    <span class="tag">BharatGen Research</span>
+    <span class="preview">Early Access Preview</span>
+  </div>
+  <h1 class="title">
+    Patram <span class="grad">Grounder</span>
+    <span class="title-sub">Answers you can point to. Reasoning you can watch. One model — बात और सबूत, साथ में।</span>
+  </h1>
+  <p class="dek">A single BharatGen document model that doesn't just answer — it shows you <strong>where</strong> on the page every answer comes from, with pixel-accurate evidence. Flip one toggle and the same model switches from a crisp grounded answer to a step-by-step <strong>grounded chain of reasoning</strong>, every step tied to the exact region it relied on.</p>
+
+  <div class="authors">
+    <a href="https://bharatgen.com/" target="_blank">BharatGen Document Intelligence</a> &nbsp;·&nbsp; in collaboration with <a href="https://www.iiit.ac.in/" target="_blank">IIIT Hyderabad</a>
+  </div>
+  <div class="affil"><strong>One unified model.</strong> No pipeline, no second system — grounding and reasoning share the same weights.</div>
+
+  <div class="meta-row">
+    <a class="pill-btn primary" href="#demo">▶ Live interactive demo</a>
+    <a class="pill-btn" href="#data">PatramQA data family</a>
+    <span class="pill-btn soon">🤗 Model weights <span class="s">Soon</span></span>
+    <span class="pill-btn soon">Paper <span class="s">Soon</span></span>
+  </div>
+
+  <div class="hero-logos">
+    <span class="lbl">Built by</span>
+    <a href="https://bharatgen.com/" target="_blank" rel="noopener"><img src="static/images/logos/bharatgen_logo.png" alt="BharatGen"></a>
+  </div>
+</header>
+
+<main>
+
+  <!-- INTRO -->
+  <section class="wrap reveal">
+    <span class="eyebrow-lbl">The problem with a plain answer</span>
+    <p class="lede">In an insurance claim, a loan file, or a compliance certificate, an answer without evidence is a liability. A model that says "the claim is consistent" but cannot point to <em>which line</em>, <em>which cell</em>, or <em>which chart wedge</em> it read is impossible to audit — and impossible to trust in the workflows that actually run Indian institutions.</p>
+    <p>Patram Grounder is built for exactly this. Every answer is emitted alongside <strong>pixel-accurate evidence masks</strong> — not loose rectangles, but shapes that follow curved text, table cells, pie slices, and flowchart nodes. And because a single field is sometimes not enough, Patram Grounder can ground <strong>multiple spans at once</strong>, at <strong>three levels of scope</strong> — the exact phrase, the full line, or the surrounding block.</p>
+    <blockquote class="callout">Patram Grounder unifies two capabilities that used to need two separate systems — precise multi-span answer grounding and step-wise grounded reasoning — into <strong>one BharatGen model with a single toggle</strong>. You choose what comes out; the evidence comes free either way.</blockquote>
+  </section>
+
+  <!-- TWO MODES -->
+  <section class="wrap divider-top reveal" id="modes">
+    <h2 class="section-title">One model. Two ways to answer.</h2>
+    <p class="section-sub">The same weights, the same document, the same question — you decide how much of the model's working you want to see. This toggle is the whole idea.</p>
+
+    <div class="modes-strip">
+      <div class="mode-cell answer">
+        <span class="m-tag">MODE&nbsp;A · GROUNDED ANSWER</span>
+        <h3>Fast, point-precise answers</h3>
+        <p>The model returns the answer directly, with each answer span linked to its evidence mask on the page. Multi-span, and adjustable across three scopes — phrase, line, block. Ideal for high-volume extraction and field verification.</p>
+      </div>
+      <div class="mode-mid">
+        <span class="knob">⇄</span>
+        <span class="txt">Toggle<br>output</span>
+      </div>
+      <div class="mode-cell reason">
+        <span class="m-tag">MODE&nbsp;B · GROUNDED REASONING</span>
+        <h3>Step-by-step, every step grounded</h3>
+        <p>The model thinks out loud — a numbered chain of reasoning where each step highlights the exact region it used before committing to a final, grounded answer. Ideal for charts, flowcharts, multi-hop questions, and anything a human must audit.</p>
+      </div>
+    </div>
+
+    <div class="pillars four" style="margin-top:26px;">
+      <div class="pillar">
+        <div class="num">01</div>
+        <h3>🎯 Multi-span grounding</h3>
+        <p>One question, several answers, several places on the page — Patram Grounder grounds each answer span to its own distinct evidence region in a single pass.</p>
+      </div>
+      <div class="pillar">
+        <div class="num">02</div>
+        <h3>🔍 Multi-granular scope</h3>
+        <p>Evidence at three nested levels — the precise <strong>phrase</strong>, the full <strong>line</strong> of context, or the surrounding <strong>block</strong> — so the grounding matches the question, from a single value to a whole clause.</p>
+      </div>
+      <div class="pillar">
+        <div class="num">03</div>
+        <h3>📊 Beyond text</h3>
+        <p>Grounds graphical and structural elements too — chart bars and pie slices, legend keys, flowchart nodes, diagram arrows, curved and rotated text — with masks, not bounding boxes.</p>
+      </div>
+      <div class="pillar">
+        <div class="num">04</div>
+        <h3>🧭 Grounded reasoning</h3>
+        <p>Turn on Mode B and the answer becomes an auditable trail: each intermediate step names its evidence and shows it, so a reviewer can follow the model's logic region by region.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE DEMO -->
+  <section class="wrap reveal" id="demo">
+    <h2 class="section-title">See the toggle work</h2>
+    <p class="section-sub">Pick a document, choose a mode, and press <strong>Run</strong>. Watch the same model either answer directly with grounded spans, or reason step-by-step — each grounding sweeping across the exact evidence on the page.</p>
+
+    <div class="demo-shell">
+      <div class="demo-toolbar">
+        <div class="mode-switch" id="mode-switch">
+          <button data-mode="answer" class="is-active">🎯 Grounded Answer</button>
+          <button data-mode="reason">🧭 Grounded Reasoning</button>
+        </div>
+        <span class="toolbar-note">one model · toggle output</span>
+        <a href="https://bharatgen.com/" target="_blank" rel="noopener" title="BharatGen"><img class="bg-logo" src="static/images/logos/bharatgen_logo.png" alt="BharatGen"></a>
+      </div>
+
+      <div class="ex-tabs" id="ex-tabs">
+        <button class="ex-tab is-active" data-ex="finance">Finance report</button>
+        <button class="ex-tab" data-ex="legal">Legal / NDA</button>
+        <button class="ex-tab" data-ex="transcript">Transcript</button>
+        <button class="ex-tab" data-ex="chart">Chart (graphical)</button>
+      </div>
+
+      <div class="demo-panel">
+        <div class="img-col">
+          <div class="img-container" id="img-container">
+            <img id="doc-img" src="" alt="Document">
+          </div>
+          <div class="gran-toggle" id="gran-toggle">
+            <span class="g-lbl">Scope</span>
+            <button class="gran-btn is-active" data-gran="phrase">Phrase</button>
+            <button class="gran-btn" data-gran="line">Line</button>
+            <button class="gran-btn" data-gran="block">Block</button>
+          </div>
+        </div>
+
+        <div class="chat-col">
+          <div class="q-bubble"><span class="q-lbl">Question</span><span id="q-text"></span></div>
+          <div class="send-row">
+            <button class="send-btn" id="send-btn">▶ Run</button>
+          </div>
+          <div class="out-area" id="out-area"></div>
+          <div class="legend-row" id="legend-row" style="display:none;"></div>
+          <div class="reset-row" id="reset-row" style="display:none;">
+            <button class="reset-btn" id="reset-btn">↩ Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="demo-caption">The two outputs come from a single set of weights. Mode A is the fast path; Mode B exposes the model's grounded working for audit — same evidence, more of the trail.</p>
+  </section>
+
+  <!-- DATA -->
+  <section class="wrap divider-top reveal" id="data">
+    <h2 class="section-title">The PatramQA data family</h2>
+    <p class="section-sub">Patram Grounder is trained and evaluated on <strong>PatramQA</strong> — one grounding-native corpus, organized as a single tree. Every split hangs off the same root, so answer grounding, graphical grounding, reasoning, alignment, and evaluation all share a consistent annotation standard.</p>
+
+    <div class="tree-wrap">
+<pre class="tree"><span class="root">PatramQA</span>  <span class="desc"># grounding-native document QA corpus — 500K docs · 3.5M grounded QA pairs</span>
+│
+├── <span class="node">PatramQA-Answer</span>     <span class="desc">multi-span, multi-granular grounded QA  ·  phrase ⊂ line ⊂ block</span>   <span class="stat">2.0M pairs</span>
+│
+├── <span class="node">PatramQA-CoT</span>        <span class="desc">step-wise grounded chain-of-reasoning, each step masked to evidence</span>   <span class="stat">1.5M pairs</span>
+│
+├── <span class="node">PatramQA-Graphic</span>    <span class="desc">charts, pie slices, flowchart nodes, diagram arrows, curved text</span>   <span class="stat">included</span>
+│
+├── <span class="node">PatramQA-Pref</span>       <span class="desc">preference pairs for alignment — answer, reasoning &amp; grounding jointly</span>   <span class="stat">20K pairs</span>
+│
+└── <span class="node">PatramQA-Bench</span>      <span class="desc">human-verified benchmark — answer, reasoning &amp; grounding quality</span>   <span class="stat">5K docs · 15K QA</span>
+</pre>
+    </div>
+
+    <div class="ds-cards">
+      <div class="ds-card">
+        <h3>📦 PatramQA — training corpus</h3>
+        <span class="kbadge">Answer + CoT + Graphic</span>
+        <p>Large-scale, layout-aware grounded QA built through a unified data engine spanning reports, forms, tables, charts, flowcharts, and curved-text documents — annotated with pixel-level masks at phrase, line, and block scope.</p>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-num">500K</div><div class="stat-lbl">Documents</div></div>
+          <div class="stat-box"><div class="stat-num">3.5M</div><div class="stat-lbl">Grounded QA</div></div>
+          <div class="stat-box"><div class="stat-num">3</div><div class="stat-lbl">Mask scopes</div></div>
+          <div class="stat-box"><div class="stat-num">Mask</div><div class="stat-lbl">Not boxes</div></div>
+        </div>
+      </div>
+      <div class="ds-card">
+        <h3>📊 PatramQA-Bench — evaluation</h3>
+        <span class="kbadge">Human-verified</span>
+        <p>A diverse, human-verified benchmark that scores all three faces of the model at once: answer quality, chain-of-reasoning quality, and grounding fidelity — across text-rich documents, charts, flowcharts, and tables.</p>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-num">5K</div><div class="stat-lbl">Documents</div></div>
+          <div class="stat-box"><div class="stat-num">15K</div><div class="stat-lbl">QA pairs</div></div>
+          <div class="stat-box"><div class="stat-num">AQ·CQ·GQ</div><div class="stat-lbl">Metrics</div></div>
+          <div class="stat-box"><div class="stat-num">4</div><div class="stat-lbl">Doc types</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENCHMARKS -->
+  <section class="wrap divider-top reveal" id="benchmarks">
+    <h2 class="section-title">Benchmarks</h2>
+    <p class="section-sub">Evaluated on <strong>PatramQA-Bench</strong> against leading proprietary models. Commercial models can answer, but their grounding collapses — they cannot reliably point to <em>where</em>. Figures are illustrative placeholders for this preview, pending the final evaluation run.</p>
+
+    <div class="board-section-label">Unified evaluation — answer, reasoning &amp; grounding quality</div>
+    <div class="board-wrap">
+      <table class="board">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Answer&nbsp;(AQ)</th>
+            <th>Reasoning&nbsp;(CQ)</th>
+            <th>Grounding&nbsp;(GQ)</th>
+            <th>Graphical&nbsp;IoU</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="us"><td><span class="rank-badge">①</span>Patram Grounder</td><td class="best">85.8</td><td class="best">82.0</td><td class="best">81.9</td><td class="best">70.5</td></tr>
+          <tr><td>Gemini 3 Pro</td><td>84.2</td><td>75.2</td><td>11.4</td><td>55.4</td></tr>
+          <tr><td>GPT-5</td><td>82.9</td><td>76.8</td><td>4.8</td><td>9.3</td></tr>
+          <tr><td>Claude Sonnet 4.5</td><td>79.9</td><td>71.3</td><td>7.1</td><td>12.6</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="board-note">Proprietary models reach competitive answer quality but their grounding quality stays near single digits — they cannot produce faithful evidence masks. Grounding is where a purpose-built model separates from a general one.</p>
+  </section>
+
+  <!-- USE CASES -->
+  <section class="wrap divider-top reveal" id="usecases">
+    <h2 class="section-title">Where it makes a difference</h2>
+    <p class="section-sub">Three workflows where an answer alone is not enough — someone downstream has to see the evidence, or follow the reasoning, before they can act.</p>
+
+    <div class="usecases">
+
+      <div class="usecase">
+        <div class="sector">Insurance — Medical Claims<span class="tag-script">MER · Pathology · Claim Form</span></div>
+        <div>
+          <p><strong>An adjudicator cannot sign off on "consistent" — they have to see it.</strong> In Mode B, Patram Grounder walks the reasoning and highlights each piece of evidence it used, so the human reviewer audits a trail instead of trusting a verdict.</p>
+          <div class="trace">
+<span class="q">Q: "Is the diagnosis on the pathology report consistent with the declared condition on the claim form?"</span>
+S1: Read diagnosis → <span class="grounded">Hypertensive heart disease, Stage II</span> (pathology, line grounded)
+S2: Read declared condition → <span class="grounded">Hypertension with cardiac involvement</span> (claim form, phrase grounded)
+S3: Compare → same ICD-10 category, equivalent terminology
+<span class="final">Answer: Consistent — with every step you can point to. ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="usecase">
+        <div class="sector">Banking — Loan Files<span class="tag-script">आवेदन · दस्तावेज़</span></div>
+        <div>
+          <p><strong>Field extraction that can be re-checked in seconds.</strong> In Mode A, every extracted value comes back with its evidence mask, so an ops reviewer verifies a figure by glancing at the highlighted cell — no hunting through the page.</p>
+          <div class="trace">
+<span class="q">Q: "What is the net monthly income declared, and where does it appear?"</span>
+S1: Declared net monthly income → <span class="grounded">₹84,000</span> (ITR summary, phrase mask)
+S2: Supporting line → <span class="grounded">"Net income after deductions … 84,000"</span> (line mask)
+<span class="final">Answer: ₹84,000 — grounded to the exact line and value. ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="usecase">
+        <div class="sector">Analytics — Charts &amp; Reports<span class="tag-script">आँकड़े · रिपोर्ट</span></div>
+        <div>
+          <p>Charts, pie slices, flowchart nodes and legends defeat box-based grounding — a wedge is not a rectangle. Patram Grounder grounds the <em>graphical element itself</em> with a mask, so an answer read off a chart can be traced back to the precise slice, bar, or node it came from — the kind of question that shows up constantly in Indian financial and government reporting.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- WHATS NEXT -->
+<section class="next-section" id="whats-next">
+  <div class="wrap">
+    <h2>What comes next</h2>
+    <p>Patram Grounder v1 is an early-access preview of BharatGen's grounding model. The roadmap carries the same one-model, grounded-everything principle further.</p>
+    <div class="teaser-grid">
+      <div class="teaser-item">
+        <div class="t-label">Languages</div>
+        <div class="t-val">Grounded QA across India's scheduled languages — question and reasoning, not just OCR</div>
+      </div>
+      <div class="teaser-item">
+        <div class="t-label">Longer documents</div>
+        <div class="t-val">Multi-page grounding — evidence that spans pages, tracked across a whole file</div>
+      </div>
+      <div class="teaser-item">
+        <div class="t-label">Tighter masks</div>
+        <div class="t-val">Even finer graphical segmentation for dense charts, seals, and stamps</div>
+      </div>
+      <div class="teaser-item">
+        <div class="t-label">Open release</div>
+        <div class="t-val">Model weights and the full PatramQA family, released for the community</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="cta">
+  <div class="wrap foot-cta">
+    <h2>Build on Patram Grounder</h2>
+    <p>Patram Grounder is a BharatGen research model for document understanding across Indian institutional workflows — where an answer has to come with its evidence. Weights and the PatramQA data family are being prepared for release.</p>
+    <div class="foot-buttons">
+      <a class="pill-btn primary" href="#demo">Try the live demo</a>
+      <span class="pill-btn soon">🤗 Model weights <span class="s">Soon</span></span>
+      <span class="pill-btn soon">PatramQA dataset <span class="s">Soon</span></span>
+    </div>
+    <p class="fine">
+      Benchmark figures shown are illustrative placeholders for this preview, pending the final evaluation run. Patram Grounder is an early-access BharatGen research model. Document images in the demo are used for illustration of grounding behaviour.<br>
+      © BharatGen Research · in collaboration with <a href="https://www.iiit.ac.in/" target="_blank">IIIT Hyderabad</a>.
+    </p>
+  </div>
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   Patram Grounder — unified grounding demo
+   One engine, two modes (answer / reasoning), streamed token by token.
+   Grounding rendered as bbox highlights (phrase/line/block) or masks.
+   ───────────────────────────────────────────────────────────── */
+(function(){
+  'use strict';
+
+  const SPAN_COLORS = [
+    { fill:'rgba(43,58,107,0.16)',  border:'#2B3A6B', text:'#2B3A6B' },
+    { fill:'rgba(181,72,47,0.16)',  border:'#B5482F', text:'#B5482F' },
+    { fill:'rgba(61,107,76,0.16)',  border:'#3D6B4C', text:'#3D6B4C' },
+    { fill:'rgba(176,129,42,0.18)', border:'#B0812A', text:'#8a6416' },
+  ];
+
+  /* ── Examples: each has bbox (phrase/line/block) OR masks, plus
+        two token streams — `answer` (Mode A) and `reason` (Mode B). ── */
+  const EXAMPLES = {
+    finance: {
+      image:'static/images/docs/finance_doc.png',
+      question:'What was the Customer Support renewal rate for the quarter ended June 30, 2019, and the Customer Support revenue in the Americas for 2019?',
+      spans:[
+        { text:'approximately 91%', bbox:{ phrase:[{x:33.86,y:32.52,w:13.64,h:1.61}], line:[{x:7.86,y:32.52,w:83.36,h:1.88}], block:[{x:7.77,y:20.45,w:84.36,h:15.14}] } },
+        { text:'$718,209',          bbox:{ phrase:[{x:41.68,y:49.06,w:9.45,h:1.81}], line:[{x:7.95,y:48.92,w:83.27,h:2.09}], block:[{x:7.59,y:40.96,w:84.36,h:20.66}] } }
+      ],
+      answer:[
+        ['t','The Customer Support renewal rate was '],['s',0],['t','approximately 91%'],['/s'],['g',0],
+        ['t', ' and the Americas Customer Support revenue was '],['s',1],['t','$718,209'],['/s'],['g',1],['t',' for 2019.']
+      ],
+      reason:[
+        { l:'S1', toks:[['t','Locate the renewal-rate statement for the quarter ended June 30, 2019 → '],['s',0],['t','approximately 91%'],['/s'],['g',0],['t','.']] },
+        { l:'S2', toks:[['t','Locate the Americas Customer Support revenue line for 2019 → '],['s',1],['t','$718,209'],['/s'],['g',1],['t','.']] },
+        { l:'Sf', toks:[['t','Renewal rate '],['s',0],['t','approximately 91%'],['/s'],['g',0],['t',', Americas revenue '],['s',1],['t','$718,209'],['/s'],['g',1],['t','.']], final:true }
+      ]
+    },
+
+    legal: {
+      image:'static/images/docs/legal_doc.png',
+      question:'Which types of organizations may be considered as the Auditee according to this NDA?',
+      spans:[
+        { text:'Central Govt. Ministry / Departments / State Government Departments',
+          bbox:{ phrase:[{x:24.95,y:14.09,w:67.82,h:2.24},{x:9.23,y:16.34,w:32.91,h:2.37}],
+                 line:[{x:8.86,y:14.03,w:84.82,h:2.24},{x:8.68,y:16.27,w:34.55,h:2.37}],
+                 block:[{x:8.68,y:14.03,w:84.09,h:4.55}] } },
+        { text:'Autonomous Societies / Not-for-profit / Public &amp; Private sector Undertakings',
+          bbox:{ phrase:[{x:25.5,y:34.59,w:67,h:2.31},{x:9.05,y:36.84,w:47.91,h:2.5}],
+                 line:[{x:9.14,y:34.4,w:83.45,h:2.18},{x:9.05,y:36.64,w:47.91,h:2.56}],
+                 block:[{x:9.14,y:34.53,w:84.45,h:4.55}] } }
+      ],
+      answer:[
+        ['t','The Auditee may be a '],['s',0],['t','Central Govt. Ministry / Departments / State Government Department'],['/s'],['g',0],
+        ['t',', or an '],['s',1],['t','Autonomous Society / Not-for-profit / Public or Private sector Undertaking'],['/s'],['g',1],['t','.']
+      ],
+      reason:[
+        { l:'S1', toks:[['t','Scan the clause defining the Auditee. First eligible category → '],['s',0],['t','Central Govt. Ministry / Departments / State Government Departments'],['/s'],['g',0],['t','.']] },
+        { l:'S2', toks:[['t','Second eligible category listed below it → '],['s',1],['t','Autonomous Societies / Not-for-profit / Public &amp; Private sector Undertakings'],['/s'],['g',1],['t','.']] },
+        { l:'Sf', toks:[['t','Both '],['s',0],['t','government bodies'],['/s'],['g',0],['t',' and '],['s',1],['t','autonomous / private undertakings'],['/s'],['g',1],['t',' qualify as the Auditee.']], final:true }
+      ]
+    },
+
+    transcript: {
+      image:'static/images/docs/transcript_doc.png',
+      question:"What is the student's ID number, and what grade did Data Analytics receive?",
+      spans:[
+        { text:'3123456', bbox:{ phrase:[{x:22.95,y:13.90,w:7.73,h:1.67}], line:[{x:7.23,y:13.90,w:23.73,h:1.80}], block:[{x:7.32,y:13.77,w:23.27,h:1.99}] } },
+        { text:'HD',      bbox:{ phrase:[{x:85.50,y:27.61,w:3.45,h:1.48}], line:[{x:15.23,y:27.48,w:73.73,h:1.80}], block:[{x:6.95,y:22.33,w:84.36,h:15.38}] } }
+      ],
+      answer:[
+        ['t','The student ID is '],['s',0],['t','3123456'],['/s'],['g',0],
+        ['t',' and the grade for Data Analytics is '],['s',1],['t','HD'],['/s'],['g',1],['t','.']
+      ],
+      reason:[
+        { l:'S1', toks:[['t','Find the student identifier in the header → '],['s',0],['t','3123456'],['/s'],['g',0],['t','.']] },
+        { l:'S2', toks:[['t','Find the Data Analytics row and read its grade column → '],['s',1],['t','HD'],['/s'],['g',1],['t','.']] },
+        { l:'Sf', toks:[['t','Student '],['s',0],['t','3123456'],['/s'],['g',0],['t',' scored '],['s',1],['t','HD'],['/s'],['g',1],['t',' in Data Analytics.']], final:true }
+      ]
+    },
+
+    chart: {
+      image:'static/images/docs/coffee_chart.png',
+      question:'Which coffee brand is being compared, and what is the average coffee price for New York?',
+      spans:[
+        { text:'Starbucks Coffee (logo)', masks:[
+          { points:[[82.18,47.77],[82.73,45.01],[83.91,42.55],[86.27,39.78],[88.45,39.02],[91.18,39.17],[92.64,41.17],[94.36,43.01],[95,45.78],[95.73,49.16],[93.55,49.31],[92.55,47.16],[91.64,44.85],[90.73,43.47],[88.73,43.01],[87.73,42.86],[86.18,44.7],[84.91,47.77],[84.27,50.38]] },
+          { points:[[83.55,55.76],[85.18,53.61],[86.82,55.91],[88.36,56.99],[90.09,56.68],[91.45,55.15],[92.55,53.3],[94.09,56.37],[93.09,58.37],[90.64,60.37],[88.18,60.98],[84.73,58.99]] }
+        ]},
+        { text:'New York (axis label)', masks:[ { points:[[3,41.01],[12.27,41.01],[12.27,44.55],[3,44.55]] } ] },
+        { text:'$3.45 (bar value)', masks:[ { points:[[62.45,41.32],[68,41.32],[68,44.39],[62.45,44.39]] } ] }
+      ],
+      answer:[
+        ['t','The brand being compared is '],['s',0],['t','Starbucks Coffee'],['/s'],['g',0],
+        ['t',', and the average coffee price for '],['s',1],['t','New York'],['/s'],['g',1],
+        ['t',' is '],['s',2],['t','$3.45'],['/s'],['g',2],['t','.']
+      ],
+      reason:[
+        { l:'S1', toks:[['t','Identify the brand from the chart logo → '],['s',0],['t','Starbucks Coffee'],['/s'],['g',0],['t','.']] },
+        { l:'S2', toks:[['t','Find the New York row on the axis → '],['s',1],['t','New York'],['/s'],['g',1],['t','.']] },
+        { l:'S3', toks:[['t','Read the bar value aligned to that row → '],['s',2],['t','$3.45'],['/s'],['g',2],['t','.']] },
+        { l:'Sf', toks:[['t','For '],['s',0],['t','Starbucks'],['/s'],['g',0],['t',', the '],['s',1],['t','New York'],['/s'],['g',1],['t',' average price is '],['s',2],['t','$3.45'],['/s'],['g',2],['t','.']], final:true }
+      ]
+    }
+  };
+
+  /* ── State ── */
+  let curKey = 'finance';
+  let curMode = 'answer';      // 'answer' | 'reason'
+  let curGran = 'phrase';
+  let streamTimer = null;
+  let hlEls = [];              // per-span array of DOM/SVG nodes
+  let svgOverlay = null;
+
+  /* ── DOM refs ── */
+  const imgEl        = document.getElementById('doc-img');
+  const imgContainer = document.getElementById('img-container');
+  const qText        = document.getElementById('q-text');
+  const outArea      = document.getElementById('out-area');
+  const sendBtn      = document.getElementById('send-btn');
+  const legendRow    = document.getElementById('legend-row');
+  const resetRow     = document.getElementById('reset-row');
+  const resetBtn     = document.getElementById('reset-btn');
+  const granToggle   = document.getElementById('gran-toggle');
+
+  function isMask(ex){ return ex.spans.length>0 && Array.isArray(ex.spans[0].masks); }
+
+  /* ── Build the highlight nodes for the current example ── */
+  function buildHighlights(ex){
+    hlEls.forEach(arr=>arr.forEach(n=>n.remove()));
+    hlEls = [];
+    if(svgOverlay){ svgOverlay.remove(); svgOverlay=null; }
+
+    if(isMask(ex)){
+      granToggle.style.display='none';
+      svgOverlay = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svgOverlay.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;';
+      svgOverlay.setAttribute('viewBox','0 0 100 100');
+      svgOverlay.setAttribute('preserveAspectRatio','none');
+      imgContainer.appendChild(svgOverlay);
+      ex.spans.forEach((span,i)=>{
+        const c=SPAN_COLORS[i];
+        const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+        g.setAttribute('class','hl-poly');
+        span.masks.forEach(m=>{
+          const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+          poly.setAttribute('points', m.points.map(p=>p.join(',')).join(' '));
+          poly.setAttribute('fill',c.fill);
+          poly.setAttribute('stroke',c.border);
+          poly.setAttribute('stroke-width','0.5');
+          g.appendChild(poly);
+        });
+        svgOverlay.appendChild(g);
+        hlEls.push([g]);
+      });
+    } else {
+      granToggle.style.display = (curMode==='answer') ? '' : 'none';
+      ex.spans.forEach((span,i)=>{
+        const c=SPAN_COLORS[i];
+        const arr=span.bbox[curGran].map(b=>{
+          const d=document.createElement('div');
+          d.className='hl-box';
+          d.style.background=c.fill;
+          d.style.border='2px solid '+c.border;
+          d.style.left=b.x+'%'; d.style.top=b.y+'%'; d.style.width=b.w+'%'; d.style.height=b.h+'%';
+          imgContainer.appendChild(d);
+          return d;
+        });
+        hlEls.push(arr);
+      });
+    }
+  }
+
+  function reveal(idx){
+    const arr=hlEls[idx]; if(!arr) return;
+    arr.forEach(n=>{ n.classList.add('revealed'); n.classList.remove('sweeping'); });
+    arr[0] && arr[0].getBoundingClientRect();
+    arr.forEach(n=>n.classList.add('sweeping'));
+  }
+
+  /* Re-draw bbox rects when granularity changes (answer mode only) */
+  function applyGran(gran){
+    curGran=gran;
+    const ex=EXAMPLES[curKey];
+    if(isMask(ex)) return;
+    const anyRevealed = hlEls.some(a=>a[0] && a[0].classList.contains('revealed'));
+    ex.spans.forEach((span,i)=>{
+      hlEls[i].forEach(n=>n.remove());
+      const c=SPAN_COLORS[i];
+      hlEls[i]=span.bbox[gran].map(b=>{
+        const d=document.createElement('div');
+        d.className='hl-box'+(anyRevealed?' revealed':'');
+        d.style.background=c.fill; d.style.border='2px solid '+c.border;
+        d.style.left=b.x+'%'; d.style.top=b.y+'%'; d.style.width=b.w+'%'; d.style.height=b.h+'%';
+        if(anyRevealed) d.style.clipPath='inset(0 0% 0 0)';
+        imgContainer.appendChild(d);
+        return d;
+      });
+    });
+  }
+
+  /* ── Flatten a token stream into per-char events ── */
+  function flatten(toks){
+    const ev=[]; let inSpan=null;
+    for(const t of toks){
+      if(t[0]==='t'){ for(const ch of t[1]) ev.push({type:'char',ch,span:inSpan}); }
+      else if(t[0]==='s'){ inSpan=t[1]; }
+      else if(t[0]==='/s'){ inSpan=null; ev.push({type:'endspan'}); }
+      else if(t[0]==='g'){ ev.push({type:'ground',span:t[1]}); }
+    }
+    return ev;
+  }
+
+  function makeSpanEl(spanIdx){
+    const c=SPAN_COLORS[spanIdx];
+    const el=document.createElement('span');
+    el.className='answer-span';
+    el.style.cssText='background:'+c.fill+';color:'+c.text+';border-radius:3px;padding:0 3px;';
+    return el;
+  }
+  function makeChip(spanIdx){
+    const chip=document.createElement('span');
+    chip.className='ground-chip';
+    chip.style.color=SPAN_COLORS[spanIdx].border;
+    chip.textContent='[GND]';
+    return chip;
+  }
+
+  /* ── Stream into a target element ── */
+  function streamInto(target, toks, done){
+    const ev=flatten(toks);
+    let i=0, spanEl=null, spanIdx=null, plainEl=null;
+    streamTimer=setInterval(()=>{
+      if(i>=ev.length){ clearInterval(streamTimer); streamTimer=null; done&&done(); return; }
+      const e=ev[i++];
+      if(e.type==='char'){
+        if(e.span!==null){
+          if(!spanEl || spanIdx!==e.span){ spanEl=makeSpanEl(e.span); target.appendChild(spanEl); spanIdx=e.span; plainEl=null; }
+          spanEl.appendChild(document.createTextNode(e.ch));
+        } else {
+          if(spanIdx!==null){ spanEl=null; spanIdx=null; }
+          if(!plainEl){ plainEl=document.createElement('span'); target.appendChild(plainEl); }
+          plainEl.appendChild(document.createTextNode(e.ch));
+        }
+      } else if(e.type==='endspan'){ spanEl=null; spanIdx=null; plainEl=null; }
+      else if(e.type==='ground'){ target.appendChild(makeChip(e.span)); reveal(e.span); spanEl=null; spanIdx=null; plainEl=null; }
+    }, 22);
+  }
+
+  function showLegend(){
+    legendRow.innerHTML='';
+    EXAMPLES[curKey].spans.forEach((span,i)=>{
+      const c=SPAN_COLORS[i];
+      const item=document.createElement('span'); item.className='legend-item';
+      const dot=document.createElement('span'); dot.className='legend-dot'; dot.style.background=c.border;
+      const lab=document.createElement('span'); lab.style.cssText='color:'+c.text+';font-weight:600;'; lab.textContent='#'+(i+1);
+      const txt=document.createElement('span'); txt.innerHTML=' '+span.text;
+      item.append(dot,lab,txt);
+      legendRow.appendChild(item);
+    });
+    legendRow.style.display='flex';
+    resetRow.style.display='';
+  }
+
+  /* ── Run: Mode A streams one bubble; Mode B streams sequential steps ── */
+  function run(){
+    sendBtn.disabled=true;
+    outArea.innerHTML='';
+    legendRow.style.display='none';
+    resetRow.style.display='none';
+    const ex=EXAMPLES[curKey];
+
+    if(curMode==='answer'){
+      const bubble=document.createElement('div'); bubble.className='a-bubble';
+      outArea.appendChild(bubble);
+      streamInto(bubble, ex.answer, showLegend);
+    } else {
+      const steps=ex.reason;
+      let s=0;
+      (function nextStep(){
+        if(s>=steps.length){ showLegend(); return; }
+        const step=steps[s++];
+        const row=document.createElement('div'); row.className='step-row';
+        const lbl=document.createElement('span'); lbl.className='step-lbl'+(step.final?' final':''); lbl.textContent=step.final?'✓':step.l;
+        const txt=document.createElement('span'); txt.className='step-txt';
+        row.append(lbl,txt); outArea.appendChild(row);
+        streamInto(txt, step.toks, ()=>setTimeout(nextStep, 260));
+      })();
+    }
+  }
+
+  /* ── Load an example fresh ── */
+  function load(){
+    if(streamTimer){ clearInterval(streamTimer); streamTimer=null; }
+    const ex=EXAMPLES[curKey];
+    imgEl.src=ex.image;
+    qText.innerHTML=ex.question;
+    outArea.innerHTML='';
+    legendRow.style.display='none';
+    resetRow.style.display='none';
+    sendBtn.disabled=false;
+    curGran='phrase';
+    document.querySelectorAll('.gran-btn').forEach(b=>b.classList.toggle('is-active', b.dataset.gran==='phrase'));
+    buildHighlights(ex);
+  }
+
+  /* ── Wire up controls ── */
+  document.querySelectorAll('#mode-switch button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#mode-switch button').forEach(x=>x.classList.remove('is-active'));
+      b.classList.add('is-active');
+      curMode=b.dataset.mode;
+      load();
+      run();   /* flip the toggle → instantly show the other output form */
+    });
+  });
+  document.querySelectorAll('#ex-tabs .ex-tab').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#ex-tabs .ex-tab').forEach(x=>x.classList.remove('is-active'));
+      b.classList.add('is-active');
+      curKey=b.dataset.ex;
+      load();
+    });
+  });
+  document.querySelectorAll('.gran-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.gran-btn').forEach(x=>x.classList.remove('is-active'));
+      b.classList.add('is-active');
+      applyGran(b.dataset.gran);
+    });
+  });
+  sendBtn.addEventListener('click', run);
+  resetBtn.addEventListener('click', load);
+
+  /* ── Init ── */
+  load();
+
+  /* ── Scroll reveal ── */
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  },{threshold:.1});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  /* ── Smooth-scroll with sticky-nav offset ── */
+  document.querySelectorAll('a[href^="#"]').forEach(a=>{
+    a.addEventListener('click',e=>{
+      const t=document.querySelector(a.getAttribute('href'));
+      if(t){ e.preventDefault(); window.scrollTo({top:t.getBoundingClientRect().top+window.scrollY-70, behavior:'smooth'}); }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
