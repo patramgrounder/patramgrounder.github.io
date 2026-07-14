@@ -333,6 +333,35 @@
   .fine{font-size:.78rem; color:var(--ink-soft); margin-top:40px; border-top:1px solid var(--rule); padding-top:18px; line-height:1.8;}
   .fine a{color:var(--ink-soft);}
 
+  /* ---------- QUALITATIVE GALLERY ---------- */
+  .gallery-group{margin-top:8px;}
+  .gallery-group + .gallery-group{margin-top:40px;}
+  .gg-head{display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  .gg-tag{font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.04em; padding:3px 10px; border-radius:20px;}
+  .gg-tag.answer{color:var(--indigo); border:1px solid var(--indigo);}
+  .gg-tag.reason{color:var(--vermillion); border:1px solid var(--vermillion);}
+  .gg-head h3{font-family:'IBM Plex Serif',serif; font-size:1.15rem; font-weight:600; margin:0;}
+  .gg-head .src{font-size:.78rem; color:var(--ink-soft); margin-left:auto;}
+  .gallery-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
+  @media(max-width:820px){.gallery-grid{grid-template-columns:1fr 1fr;}}
+  @media(max-width:560px){.gallery-grid{grid-template-columns:1fr;}}
+  figure.gcard{margin:0; border:1px solid var(--rule); border-radius:5px; background:var(--paper); overflow:hidden; transition:box-shadow .2s, transform .2s;}
+  figure.gcard:hover{box-shadow:0 10px 30px rgba(27,38,71,0.12); transform:translateY(-2px);}
+  .gcard .thumb{position:relative; height:250px; overflow:hidden; background:#fff; cursor:zoom-in; border-bottom:1px solid var(--rule);}
+  .gcard .thumb img{width:100%; height:auto; display:block;}
+  .gcard .zoom{position:absolute; top:10px; right:10px; background:rgba(27,38,71,0.82); color:#fff; font-family:'IBM Plex Mono',monospace; font-size:.62rem; letter-spacing:.05em; text-transform:uppercase; padding:3px 8px; border-radius:20px; pointer-events:none;}
+  .gcard figcaption{padding:14px 16px; font-size:.85rem; color:var(--ink-soft); line-height:1.55;}
+  .gcard figcaption strong{color:var(--ink);}
+  /* Lightbox */
+  .lightbox{position:fixed; inset:0; z-index:200; background:rgba(27,20,12,0.86); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; padding:32px; cursor:zoom-out;}
+  .lightbox.open{display:flex;}
+  .lightbox .lb-inner{max-width:960px; max-height:92vh; display:flex; flex-direction:column; gap:12px;}
+  .lightbox img{max-width:100%; max-height:82vh; object-fit:contain; border-radius:5px; border:1px solid rgba(255,255,255,0.15); background:#fff;}
+  .lightbox .lb-cap{color:rgba(247,243,234,0.9); font-size:.9rem; line-height:1.5; text-align:center;}
+  .lightbox .lb-cap strong{color:#fff;}
+  .lightbox .lb-close{position:fixed; top:20px; right:26px; color:#fff; font-size:1.8rem; font-family:'IBM Plex Sans',sans-serif; background:none; border:none; cursor:pointer; line-height:1; opacity:.8;}
+  .lightbox .lb-close:hover{opacity:1;}
+
   .reveal{opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease;}
   .reveal.in{opacity:1; transform:translateY(0);}
 </style>
@@ -352,6 +381,7 @@
       <a href="#intro">Overview</a>
       <a href="#modes">Two Modes</a>
       <a href="#demo">Live Demo</a>
+      <a href="#gallery">Gallery</a>
       <a href="#data">PatramQA</a>
       <a href="#benchmarks">Benchmarks</a>
       <a href="#usecases">Use Cases</a>
@@ -495,6 +525,65 @@
     </div>
     <p class="demo-caption">The two outputs come from a single set of weights. Mode A is the fast path; Mode B exposes the model's grounded working for audit — same evidence, more of the trail.</p>
   </section>
+
+  <!-- QUALITATIVE GALLERY -->
+  <section class="wrap divider-top reveal" id="gallery">
+    <h2 class="section-title">Grounded, on real documents</h2>
+    <p class="section-sub">A sample of Patram Grounder's output on real, messy documents — the same model in both of its modes. Click any panel to enlarge.</p>
+
+    <div class="gallery-group">
+      <div class="gg-head">
+        <span class="gg-tag answer">MODE A</span>
+        <h3>Grounded Answer — multi-span, multi-granular</h3>
+        <span class="src">Direct answers with evidence masks</span>
+      </div>
+      <div class="gallery-grid">
+        <figure class="gcard" data-full="static/images/gallery/answer_finance.png" data-cap="<strong>Financial 10-K.</strong> Two answer spans — the ~91% renewal rate and the $718,209 Americas revenue figure — each grounded to its own evidence, in prose and inside the table.">
+          <div class="thumb"><span class="zoom">⤢ Enlarge</span><img loading="lazy" src="static/images/gallery/answer_finance.png" alt="Grounded answer on a financial 10-K page"></div>
+          <figcaption><strong>Financial report.</strong> Multi-span grounding across running text and a dense revenue table.</figcaption>
+        </figure>
+        <figure class="gcard" data-full="static/images/gallery/answer_healthcare.png" data-cap="<strong>CBC blood report.</strong> The low MCV value (72.0 fL) and its clinical inference (microcytic anemia) are grounded across the results table and the causes table.">
+          <div class="thumb"><span class="zoom">⤢ Enlarge</span><img loading="lazy" src="static/images/gallery/answer_healthcare.png" alt="Grounded answer on a CBC blood report"></div>
+          <figcaption><strong>Medical report.</strong> An inferred finding grounded to both the measured value and the reference that explains it.</figcaption>
+        </figure>
+        <figure class="gcard" data-full="static/images/gallery/answer_legal.png" data-cap="<strong>Non-Disclosure Agreement.</strong> The two categories of organizations that may act as the Auditee are grounded as distinct, multi-line spans within the clause.">
+          <div class="thumb"><span class="zoom">⤢ Enlarge</span><img loading="lazy" src="static/images/gallery/answer_legal.png" alt="Grounded answer on an NDA legal document"></div>
+          <figcaption><strong>Legal / NDA.</strong> Long, multi-line answer spans grounded precisely inside a dense contract clause.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="gallery-group">
+      <div class="gg-head">
+        <span class="gg-tag reason">MODE B</span>
+        <h3>Grounded Reasoning — step-wise, every step masked</h3>
+        <span class="src">Chain-of-reasoning grounded to evidence</span>
+      </div>
+      <div class="gallery-grid">
+        <figure class="gcard" data-full="static/images/gallery/reason_medicalbill.png" data-cap="<strong>Medical bill arithmetic.</strong> S1→S<sub>f</sub>: the model reads the Blood Test cost, applies the 5% premium discount, subtracts the claim amount, and grounds every value it touches on its way to $27.50.">
+          <div class="thumb"><span class="zoom">⤢ Enlarge</span><img loading="lazy" src="static/images/gallery/reason_medicalbill.png" alt="Grounded step-wise reasoning on a medical bill"></div>
+          <figcaption><strong>Medical bill.</strong> Multi-step arithmetic where each intermediate value is grounded in the table.</figcaption>
+        </figure>
+        <figure class="gcard" data-full="static/images/gallery/reason_geometry.png" data-cap="<strong>Geometry diagram.</strong> Each reasoning step grounds the specific labeled element it relies on — the hypotenuse annotation, the unknown side 'x cm' — the kind of thin, angled evidence a rectangle cannot capture.">
+          <div class="thumb"><span class="zoom">⤢ Enlarge</span><img loading="lazy" src="static/images/gallery/reason_geometry.png" alt="Grounded reasoning on a geometry diagram"></div>
+          <figcaption><strong>Geometry diagram.</strong> Reasoning grounded to precise, non-rectangular labeled elements.</figcaption>
+        </figure>
+        <figure class="gcard" data-full="static/images/gallery/reason_foodweb.png" data-cap="<strong>Food-web diagram.</strong> Answering 'who eats penguins', the model grounds the species nodes and the directional arrows between them — grounding both graphical objects and structural connectors.">
+          <div class="thumb"><span class="zoom">⤢ Enlarge</span><img loading="lazy" src="static/images/gallery/reason_foodweb.png" alt="Grounded reasoning on a food-web diagram"></div>
+          <figcaption><strong>Food-web diagram.</strong> Nodes <em>and</em> the arrows between them grounded as the model traces a relationship.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox">
+    <button class="lb-close" id="lb-close" aria-label="Close">✕</button>
+    <div class="lb-inner">
+      <img id="lb-img" src="" alt="Enlarged example">
+      <div class="lb-cap" id="lb-cap"></div>
+    </div>
+  </div>
 
   <!-- DATA -->
   <section class="wrap divider-top reveal" id="data">
@@ -714,7 +803,7 @@ S2: Supporting line → <span class="grounded">"Net income after deductions … 
       ],
       reason:[
         { l:'S1', toks:[['t','Scan the clause defining the Auditee. First eligible category → '],['s',0],['t','Central Govt. Ministry / Departments / State Government Departments'],['/s'],['g',0],['t','.']] },
-        { l:'S2', toks:[['t','Second eligible category listed below it → '],['s',1],['t','Autonomous Societies / Not-for-profit / Public &amp; Private sector Undertakings'],['/s'],['g',1],['t','.']] },
+        { l:'S2', toks:[['t','Second eligible category listed below it → '],['s',1],['t','Autonomous Societies / Not-for-profit / Public & Private sector Undertakings'],['/s'],['g',1],['t','.']] },
         { l:'Sf', toks:[['t','Both '],['s',0],['t','government bodies'],['/s'],['g',0],['t',' and '],['s',1],['t','autonomous / private undertakings'],['/s'],['g',1],['t',' qualify as the Auditee.']], final:true }
       ]
     },
@@ -766,7 +855,7 @@ S2: Supporting line → <span class="grounded">"Net income after deductions … 
   let curKey = 'finance';
   let curMode = 'answer';      // 'answer' | 'reason'
   let curGran = 'phrase';
-  let streamTimer = null;
+  let activeTimers = [];       // every pending interval/timeout — cancelled on reload
   let hlEls = [];              // per-span array of DOM/SVG nodes
   let svgOverlay = null;
 
@@ -884,15 +973,26 @@ S2: Supporting line → <span class="grounded">"Net income after deductions … 
     return chip;
   }
 
-  /* ── Stream into a target element ── */
+  /* ── Cancel every pending timer ── */
+  function stopAllTimers(){
+    activeTimers.forEach(t=>{ clearInterval(t); clearTimeout(t); });
+    activeTimers = [];
+  }
+
+  /* ── Stream a token list into `target`, then call done() ── */
   function streamInto(target, toks, done){
     const ev=flatten(toks);
     let i=0, spanEl=null, spanIdx=null, plainEl=null;
-    streamTimer=setInterval(()=>{
-      if(i>=ev.length){ clearInterval(streamTimer); streamTimer=null; done&&done(); return; }
+    const timer=setInterval(()=>{
+      if(i>=ev.length){
+        clearInterval(timer);
+        activeTimers = activeTimers.filter(t=>t!==timer);
+        if(done) done();
+        return;
+      }
       const e=ev[i++];
       if(e.type==='char'){
-        if(e.span!==null){
+        if(e.span!==null && e.span!==undefined){
           if(!spanEl || spanIdx!==e.span){ spanEl=makeSpanEl(e.span); target.appendChild(spanEl); spanIdx=e.span; plainEl=null; }
           spanEl.appendChild(document.createTextNode(e.ch));
         } else {
@@ -902,7 +1002,8 @@ S2: Supporting line → <span class="grounded">"Net income after deductions … 
         }
       } else if(e.type==='endspan'){ spanEl=null; spanIdx=null; plainEl=null; }
       else if(e.type==='ground'){ target.appendChild(makeChip(e.span)); reveal(e.span); spanEl=null; spanIdx=null; plainEl=null; }
-    }, 22);
+    }, 20);
+    activeTimers.push(timer);
   }
 
   function showLegend(){
@@ -918,38 +1019,56 @@ S2: Supporting line → <span class="grounded">"Net income after deductions … 
     });
     legendRow.style.display='flex';
     resetRow.style.display='';
+    sendBtn.disabled=false;
   }
 
-  /* ── Run: Mode A streams one bubble; Mode B streams sequential steps ── */
+  /* ── Run: Mode A streams one answer bubble; Mode B streams a grounded chain ── */
   function run(){
-    sendBtn.disabled=true;
+    stopAllTimers();
     outArea.innerHTML='';
     legendRow.style.display='none';
     resetRow.style.display='none';
+    sendBtn.disabled=true;
     const ex=EXAMPLES[curKey];
 
-    if(curMode==='answer'){
-      const bubble=document.createElement('div'); bubble.className='a-bubble';
-      outArea.appendChild(bubble);
-      streamInto(bubble, ex.answer, showLegend);
-    } else {
-      const steps=ex.reason;
-      let s=0;
-      (function nextStep(){
-        if(s>=steps.length){ showLegend(); return; }
-        const step=steps[s++];
-        const row=document.createElement('div'); row.className='step-row';
-        const lbl=document.createElement('span'); lbl.className='step-lbl'+(step.final?' final':''); lbl.textContent=step.final?'✓':step.l;
-        const txt=document.createElement('span'); txt.className='step-txt';
-        row.append(lbl,txt); outArea.appendChild(row);
-        streamInto(txt, step.toks, ()=>setTimeout(nextStep, 260));
-      })();
+    try{
+      if(curMode==='answer'){
+        const bubble=document.createElement('div'); bubble.className='a-bubble';
+        outArea.appendChild(bubble);
+        streamInto(bubble, ex.answer, showLegend);
+      } else {
+        /* Mode B: build every step row up front (labels visible immediately),
+           then stream each step's text in sequence. */
+        const steps=ex.reason;
+        const rows=steps.map(step=>{
+          const row=document.createElement('div'); row.className='step-row';
+          const lbl=document.createElement('span');
+          lbl.className='step-lbl'+(step.final?' final':'');
+          lbl.textContent=step.final?'✓':step.l;
+          const txt=document.createElement('span'); txt.className='step-txt';
+          row.append(lbl,txt); outArea.appendChild(row);
+          return txt;
+        });
+        let s=0;
+        const runStep=()=>{
+          if(s>=steps.length){ showLegend(); return; }
+          const idx=s++;
+          streamInto(rows[idx], steps[idx].toks, ()=>{
+            const t=setTimeout(runStep, 240);
+            activeTimers.push(t);
+          });
+        };
+        runStep();
+      }
+    }catch(err){
+      outArea.innerHTML='<div class="a-bubble" style="color:#B5482F;">Demo error: '+(err&&err.message?err.message:err)+'</div>';
+      sendBtn.disabled=false;
     }
   }
 
   /* ── Load an example fresh ── */
   function load(){
-    if(streamTimer){ clearInterval(streamTimer); streamTimer=null; }
+    stopAllTimers();
     const ex=EXAMPLES[curKey];
     imgEl.src=ex.image;
     qText.innerHTML=ex.question;
@@ -1006,6 +1125,19 @@ S2: Supporting line → <span class="grounded">"Net income after deductions … 
       if(t){ e.preventDefault(); window.scrollTo({top:t.getBoundingClientRect().top+window.scrollY-70, behavior:'smooth'}); }
     });
   });
+
+  /* ── Gallery lightbox ── */
+  const lb=document.getElementById('lightbox');
+  const lbImg=document.getElementById('lb-img');
+  const lbCap=document.getElementById('lb-cap');
+  function openLb(full, cap){ lbImg.src=full; lbCap.innerHTML=cap||''; lb.classList.add('open'); }
+  function closeLb(){ lb.classList.remove('open'); lbImg.src=''; }
+  document.querySelectorAll('figure.gcard').forEach(fig=>{
+    fig.querySelector('.thumb').addEventListener('click',()=>openLb(fig.dataset.full, fig.dataset.cap));
+  });
+  document.getElementById('lb-close').addEventListener('click', closeLb);
+  lb.addEventListener('click', e=>{ if(e.target===lb || e.target.classList.contains('lb-inner')) closeLb(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLb(); });
 })();
 </script>
 
